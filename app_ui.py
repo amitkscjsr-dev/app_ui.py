@@ -39,13 +39,19 @@ if app_mode == "✍️ LinkedIn Writer":
                         "messages": [{"role": "user", "content": prompt}]
                     }
                     
-                    # The API call is now active!
-                    response = requests.post(api_url, headers=headers, json=data).json()
-                    st.write(response['choices'][0]['message']['content'])
+                    response = requests.post(api_url, headers=headers, json=data)
                     
-                    st.success("Your post is ready!")
+                    # Check if the AI accepted the request
+                    if response.status_code == 200:
+                        reply = response.json()['choices'][0]['message']['content']
+                        st.write(reply)
+                        st.success("Your post is ready!")
+                    else:
+                        # Show the exact reason the AI failed
+                        st.error(f"API Error ({response.status_code}): {response.text}")
+                        
                 except Exception as e:
-                    st.error(f"Error connecting to AI. Please check your LLM_API_KEY in the .env file. Details: {e}")
+                    st.error(f"System Error: {e}")
         else:
             st.warning("Please enter a topic first.")
 
@@ -62,17 +68,21 @@ elif app_mode == "🎨 Image Generator":
         if user_prompt:
             with st.spinner("Rendering your image..."):
                 try:
-                    api_url = "YOUR_CANVAS_API_URL_HERE" # Update with your real Canvas URL
+                    # Make sure to replace this URL with your actual Canvas API link!
+                    api_url = "https://api.your-canvas-provider.com/v1/generate" 
                     headers = {"Authorization": f"Bearer {canvas_key}", "Content-Type": "application/json"}
                     data = {"prompt": user_prompt}
                     
-                    # The API call is now active!
                     response = requests.post(api_url, headers=headers, json=data)
-                    st.image(response.content)
                     
-                    st.success("Image generated successfully!")
+                    if response.status_code == 200:
+                        st.image(response.content)
+                        st.success("Image generated successfully!")
+                    else:
+                        st.error(f"API Error ({response.status_code}): {response.text}")
+                        
                 except Exception as e:
-                    st.error(f"Error generating image. Please check your CANVAS_API_KEY and URL. Details: {e}")
+                    st.error(f"System Error: {e}")
         else:
             st.warning("Please describe the image first.")
 
@@ -89,7 +99,7 @@ elif app_mode == "🎬 Audio/Video Creator":
     if st.button(f"Generate {media_type}"):
         if prompt:
             with st.spinner(f"Processing your {media_type.lower()}..."):
-                st.info(f"Ready for your video/audio API integration!")
+                st.info("Ready for your video/audio API integration!")
         else:
             st.warning("Please provide a prompt or script.")
 
@@ -114,18 +124,25 @@ elif app_mode == "💬 AI Chatbot":
             
         with st.chat_message("assistant"):
             try:
-                # The Chatbot API call is now active!
                 api_url = "https://api.openai.com/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {llm_key}", "Content-Type": "application/json"}
                 data = {
                     "model": "gpt-4o",
                     "messages": st.session_state.messages
                 }
-                response = requests.post(api_url, headers=headers, json=data).json()
-                reply = response['choices'][0]['message']['content']
-                st.markdown(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply})
+                
+                response = requests.post(api_url, headers=headers, json=data)
+                
+                if response.status_code == 200:
+                    reply = response.json()['choices'][0]['message']['content']
+                    st.markdown(reply)
+                    st.session_state.messages.append({"role": "assistant", "content": reply})
+                else:
+                    error_msg = f"API Error ({response.status_code}): {response.text}"
+                    st.error(error_msg)
+                    st.session_state.messages.append({"role": "assistant", "content": error_msg})
+                    
             except Exception as e:
-                error_msg = f"Connection error. Please check your LLM_API_KEY. Details: {e}"
+                error_msg = f"System Error: {e}"
                 st.error(error_msg)
                 st.session_state.messages.append({"role": "assistant", "content": error_msg})
