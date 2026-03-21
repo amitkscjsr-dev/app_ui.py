@@ -69,7 +69,7 @@ elif app_mode == "🎨 Image Generator":
             with st.spinner("Rendering your image..."):
                 try:
                     # Make sure to replace this URL with your actual Canvas API link!
-                    api_url = "https://api.your-canvas-provider.com/v1/generate"
+                    api_url = "https://api.platform.openai.com/v1/generate"
                     headers = {"Authorization": f"Bearer {canvas_key}", "Content-Type": "application/json"}
                     data = {"prompt": user_prompt}
                     
