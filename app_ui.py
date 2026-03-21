@@ -31,22 +31,21 @@ if app_mode == "✍️ LinkedIn Writer":
         if topic:
             with st.spinner("Drafting your content..."):
                 try:
-                    # Example API setup for OpenAI/Standard LLM
                     api_url = "https://api.openai.com/v1/chat/completions"
                     headers = {"Authorization": f"Bearer {llm_key}", "Content-Type": "application/json"}
                     prompt = f"Write a highly engaging LinkedIn post about: {topic}. Make the tone {tone}. Include a hook, body, and a question at the end to drive engagement."
                     data = {
-                        "model": "gpt-4o", # Or whichever model you use
+                        "model": "gpt-4o", 
                         "messages": [{"role": "user", "content": prompt}]
                     }
                     
-                    # UNCOMMENT THE NEXT TWO LINES WHEN YOU HAVE YOUR LLM KEY
-                    # response = requests.post(api_url, headers=headers, json=data).json()
-                    # st.write(response['choices'][0]['message']['content'])
+                    # The API call is now active!
+                    response = requests.post(api_url, headers=headers, json=data).json()
+                    st.write(response['choices'][0]['message']['content'])
                     
-                    st.success("Your post is ready! (API call commented out until key is added)")
+                    st.success("Your post is ready!")
                 except Exception as e:
-                    st.error(f"Error connecting to AI: {e}")
+                    st.error(f"Error connecting to AI. Please check your LLM_API_KEY in the .env file. Details: {e}")
         else:
             st.warning("Please enter a topic first.")
 
@@ -63,17 +62,17 @@ elif app_mode == "🎨 Image Generator":
         if user_prompt:
             with st.spinner("Rendering your image..."):
                 try:
-                    api_url = "YOUR_CANVAS_API_URL_HERE" 
+                    api_url = "YOUR_CANVAS_API_URL_HERE" # Update with your real Canvas URL
                     headers = {"Authorization": f"Bearer {canvas_key}", "Content-Type": "application/json"}
                     data = {"prompt": user_prompt}
                     
-                    # UNCOMMENT THE NEXT TWO LINES WHEN YOUR CANVAS URL IS READY
-                    # response = requests.post(api_url, headers=headers, json=data)
-                    # st.image(response.content)
+                    # The API call is now active!
+                    response = requests.post(api_url, headers=headers, json=data)
+                    st.image(response.content)
                     
-                    st.success(f"Image prompt sent: '{user_prompt}' (API call commented out until URL is added)")
+                    st.success("Image generated successfully!")
                 except Exception as e:
-                    st.error(f"Error generating image: {e}")
+                    st.error(f"Error generating image. Please check your CANVAS_API_KEY and URL. Details: {e}")
         else:
             st.warning("Please describe the image first.")
 
@@ -90,7 +89,7 @@ elif app_mode == "🎬 Audio/Video Creator":
     if st.button(f"Generate {media_type}"):
         if prompt:
             with st.spinner(f"Processing your {media_type.lower()}..."):
-                st.info(f"To activate this, you will plug in an API key for a tool like Runway (Video) or ElevenLabs (Audio) right here!")
+                st.info(f"Ready for your video/audio API integration!")
         else:
             st.warning("Please provide a prompt or script.")
 
@@ -101,29 +100,32 @@ elif app_mode == "💬 AI Chatbot":
     st.title("💬 Brainstorming Assistant")
     st.write("Your personal AI for brainstorming and strategy.")
     
-    # Initialize the chat history in Streamlit's memory
     if "messages" not in st.session_state:
         st.session_state.messages = [{"role": "assistant", "content": "Hi! How can I help you build your creator studio today?"}]
 
-    # Draw the previous messages on the screen
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Wait for the user to type something new
     if user_input := st.chat_input("Type your message here..."):
-        
-        # 1. Show the user's message
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
             
-        # 2. Get the AI's response
         with st.chat_message("assistant"):
-            # This is where your actual LLM API call will go. 
-            # For now, it echoes back a placeholder response.
-            reply = f"I am ready to help you with: '{user_input}'. Once your LLM API key is plugged in, I'll provide real answers!"
-            st.markdown(reply)
-            
-        # 3. Save the AI's response to history
-        st.session_state.messages.append({"role": "assistant", "content": reply})
+            try:
+                # The Chatbot API call is now active!
+                api_url = "https://api.openai.com/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {llm_key}", "Content-Type": "application/json"}
+                data = {
+                    "model": "gpt-4o",
+                    "messages": st.session_state.messages
+                }
+                response = requests.post(api_url, headers=headers, json=data).json()
+                reply = response['choices'][0]['message']['content']
+                st.markdown(reply)
+                st.session_state.messages.append({"role": "assistant", "content": reply})
+            except Exception as e:
+                error_msg = f"Connection error. Please check your LLM_API_KEY. Details: {e}"
+                st.error(error_msg)
+                st.session_state.messages.append({"role": "assistant", "content": error_msg})
